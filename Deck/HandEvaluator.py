@@ -62,9 +62,9 @@ def evaluate_hand(hand: list[Card]):
         return "Straight"
     if counts[0] == 3:
         return "Three of a Kind"
+    if counts[0] == 2:
+        return "0ne Pair"
     if counts[0] == 2 and counts[1] == 2:
         return "Two Pair"
-    if counts[0] == 2:
-        return "One Pair"
 
     return "High Card" # If none of the above, it's High Card
