@@ -119,7 +119,7 @@ class ShopState(State):
         if hand:
             HAND_SCORES[hand]["chips"] += planet.chips
             HAND_SCORES[hand]["multiplier"] += planet.mult
-
+#
 
         keys = HAND_SCORES.keys()
 
