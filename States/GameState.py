@@ -791,6 +791,63 @@ class GameState(State):
         #       # Apply that Joker’s effect
         #       self.activated_jokers.add("joker card name")
         #   The last line ensures the Joker is visibly active and its effects are properly applied.
+        added_to_round = 1 #    OJO IMPORTANTE
+        if "The Joker" in owned:
+            hand_mult += 4
+            self.activated_jokers.add("The Joker")
+
+        # "Michael Myers": añadir un multiplicador aleatorio entre 0 y 23
+        if "Michael Myers" in owned:
+            rand_mult = random.randint(0, 23)
+            hand_mult += rand_mult
+            self.activated_jokers.add("Michael Myers")
+
+        # "Fibonacci": +8 multiplicador por cada carta Ace/2/3/5/8 jugada
+        if "Fibonacci" in owned:
+            fib_cards = [c for c in self.cardsSelectedList if
+                         c.rank in [Rank.ACE, Rank.TWO, Rank.THREE, Rank.FIVE, Rank.EIGHT]]
+            hand_mult += 8 * len(fib_cards)
+            self.activated_jokers.add("Fibonacci")
+
+        # "Gauntlet": +250 chips, pero reduce manos restantes en 2
+        if "Gauntlet" in owned:
+            total_chips += 250
+            self.playerInfo.amountOfHands = max(0, self.playerInfo.amountOfHands - 2)
+            self.activated_jokers.add("Gauntlet")
+
+        # "Ogre": +3 multiplicador por cada Joker que tengas
+        if "Ogre" in owned:
+            hand_mult += 3 * len(self.playerJokers)
+            self.activated_jokers.add("Ogre")
+
+        # "StrawHat": +100 chips, luego -5 por cada mano jugada en esta ronda
+        if "StrawHat" in owned:
+            total_chips += 100 - 5 * (4 - self.playerInfo.amountOfHands)
+            self.activated_jokers.add("StrawHat")
+
+        # "Hog Rider": si la mano es Straight, +100 chips
+        if "Hog Rider" in owned and hand_name == "Straight":
+            total_chips += 100
+            self.activated_jokers.add("Hog Rider")
+
+        # "? Block": si la mano tiene exactamente 4 cartas, +4 chips
+        if "? Block" in owned and len(self.cardsSelectedList) == 4:
+            total_chips += 4
+            self.activated_jokers.add("? Block")
+
+        # "Hogwarts": cada Ace jugado +4 multiplicador y +20 chips
+        if "Hogwarts" in owned:
+            aces_played = sum(1 for c in self.cardsSelectedList if c.rank == Rank.ACE)
+            hand_mult += 4 * aces_played
+            total_chips += 20 * aces_played
+            self.activated_jokers.add("Hogwarts")
+
+        # "802": si es la última mano de la ronda, duplicar ganancia final
+        if "802" in owned and self.playerInfo.amountOfHands == 0:
+            added_to_round *= 2  # multiplicador final
+            self.activated_jokers.add("802")
+
+        # Finalmente, actualizar el playerMultiplier y playerChips con los Jokers aplicados
 
         procrastinate = False
 
@@ -828,4 +885,28 @@ class GameState(State):
     #   recursion finishes, reset card selections, clear any display text or tracking lists, and
     #   update the visual layout of the player's hand.
     def discardCards(self, removeFromHand: bool):
-        self.updateCards(400, 520, self.cards, self.hand, scale=1.2)
+        if not self.cardsSelectedList or self.playerInfo.amountOfDiscards <= 0:
+            if len(self.hand) >= 8 or not self.deck:
+                # Hand full or deck empty, recursion ends
+                self.cardsSelectedList.clear()
+                self.cardsSelectedRect.clear()
+                self.updateCards(400, 520, self.cards, self.hand, scale=1.2)
+                return
+            # Draw one card and call recursively
+            self.hand.append(self.deck.pop(0))
+            self.discardCards(removeFromHand)
+            return
+
+            # Recursive case: remove the first selected card
+        card = self.cardsSelectedList.pop(0)
+        if removeFromHand:
+            if card in self.hand:
+                self.hand.remove(card)
+            self.used.append(card)
+
+        card.isSelected = False
+        self.deselect_sfx.play()
+        self.playerInfo.amountOfDiscards -= 1
+
+        # Call itself recursively to remove the next card
+        self.discardCards(removeFromHand)

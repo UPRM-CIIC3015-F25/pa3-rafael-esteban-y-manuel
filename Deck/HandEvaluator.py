@@ -54,14 +54,16 @@ def evaluate_hand(hand: list[Card]):
     counts = sorted(rank_counts.values(), reverse=True)
     if counts[0] == 4:
         return "Four of a Kind"
-    if counts[0] == 3 and counts[1] >= 2:
-        return "Full House"
+    #if counts[0] == 3 and counts[1] >= 2:
+    #   return "Full House"
     if is_flush:
         return "Flush"
     if is_straight:
         return "Straight"
     if counts[0] == 3:
         return "Three of a Kind"
+    if counts[0] == 3 and counts[1] >= 2:
+     return "Full House"
     if counts[0] == 2:
         return "0ne Pair"
     if counts[0] == 2 and counts[1] == 2:
