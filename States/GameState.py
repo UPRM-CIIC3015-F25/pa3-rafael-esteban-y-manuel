@@ -535,7 +535,44 @@ class GameState(State):
     #     - A clear base case to stop recursion when all parts are done
     #   Avoid any for/while loops — recursion alone must handle the repetition.
     def calculate_gold_reward(self, playerInfo, stage=0):
+        sub = getattr(playerInfo.levelManager, "curSubLevel", None)
+        target = getattr(sub, "score", None)
+        blind_type = getattr(sub, "blindtype", None) if sub else None
+
+
+        base_map = {
+            "SMALL": 4,
+            "MEDIUM": 8,
+            "BOSS_BLIND": 10,
+            None: 4
+        }
+
+
+        if stage == 0:
+            base = base_map.get(blind_type, base_map.get(str(blind_type).upper(), 4))
+            # Llamada recursiva para calcular bonus
+            return base + self.calculate_gold_reward(playerInfo, stage=1)
+
+
+        if not target or target <= 0:
             return 0
+
+        # Calcular overkill
+        score = getattr(playerInfo, "roundscore", 0)
+        overkill = max(0, score - target)
+        unit_value = target / 5.0  # Cada "unidad" de bonus
+
+
+        def count_units(remaining_overkill, units_left):
+            if remaining_overkill <= 0 or units_left <= 0:
+                return 0
+
+            return 1 + count_units(remaining_overkill - unit_value, units_left - 1)
+
+        units = min(5, count_units(overkill, 5))
+        bonus = int(units)
+
+        return bonus
 
     def updateCards(self, posX, posY, cardsDict, cardsList, scale=1.5, spacing=90, baseYOffset=-20, leftShift=40):
         cardsDict.clear()
