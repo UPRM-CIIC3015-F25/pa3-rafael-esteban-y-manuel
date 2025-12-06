@@ -550,7 +550,7 @@ class GameState(State):
 
         if stage == 0:
             base = base_map.get(blind_type, base_map.get(str(blind_type).upper(), 4))
-            # Llamada recursiva para calcular bonus
+
             return base + self.calculate_gold_reward(playerInfo, stage=1)
 
 
@@ -560,7 +560,7 @@ class GameState(State):
         # Calcular overkill
         score = getattr(playerInfo, "roundscore", 0)
         overkill = max(0, score - target)
-        unit_value = target / 5.0  # Cada "unidad" de bonus
+        unit_value = target / 5.0
 
 
         def count_units(remaining_overkill, units_left):
