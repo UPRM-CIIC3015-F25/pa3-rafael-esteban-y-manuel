@@ -125,7 +125,7 @@ class LevelSelectState(State):
 
         }
 
-        # Dict of boss with their color schemes
+        # Dict of boss with their color schemes.
         # key - boss name : str, value - (header color : tuple, background color : tuple)
         boss_colors = {
             "The Mark": ((120, 40, 160), (60, 30, 80)),        # purple
