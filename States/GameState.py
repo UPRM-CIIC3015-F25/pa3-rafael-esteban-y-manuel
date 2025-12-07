@@ -534,28 +534,45 @@ class GameState(State):
     #     - Recursive calculation of the overkill bonus (based on how much score exceeds the target)
     #     - A clear base case to stop recursion when all parts are done
     #   Avoid any for/while loops — recursion alone must handle the repetition.
-    def calculate_gold_reward(self, playerInfo, stage=0, total=0, overkill_left=None):
+    def calculate_gold_reward(self, playerInfo, stage=0):
+        sub = getattr(playerInfo.levelManager, "curSubLevel", None)
+        target = getattr(sub, "score", None)
+        blind_type = getattr(sub, "blindtype", None) if sub else None
+
+
+        base_map = {
+            "SMALL": 4,
+            "MEDIUM": 8,
+            "BOSS_BLIND": 10,
+            None: 4
+        }
+
+
         if stage == 0:
-            blind = playerInfo.blind_type
-            base_values = {"SMALL": 4, "BIG": 8, "BOSS": 10}
-            base_reward = base_values.get(blind, 0)
-            return self.calculate_gold_reward(playerInfo, stage=1, total=total + base_reward)
+            base = base_map.get(blind_type, base_map.get(str(blind_type).upper(), 4))
 
-        if stage == 1:
-            if overkill_left is None:
-                score = playerInfo.score
-                target = playerInfo.target
-                raw_bonus = max(0, ((score - target) / target) * 5)
-                overkill_total = min(5, int(raw_bonus))
-                return self.calculate_gold_reward(playerInfo, stage=1, total=total, overkill_left=overkill_total)
+            return base + self.calculate_gold_reward(playerInfo, stage=1)
 
-            if overkill_left == 0:
-                return self.calculate_gold_reward(playerInfo, stage=2, total=total)
 
-            return self.calculate_gold_reward(playerInfo, stage=1, total=total + 1, overkill_left=overkill_left - 1)
+        if not target or target <= 0:
+            return 0
 
-        if stage == 2:
-            return total
+        # Calcular overkill
+        score = getattr(playerInfo, "roundscore", 0)
+        overkill = max(0, score - target)
+        unit_value = target / 5.0
+
+
+        def count_units(remaining_overkill, units_left):
+            if remaining_overkill <= 0 or units_left <= 0:
+                return 0
+
+            return 1 + count_units(remaining_overkill - unit_value, units_left - 1)
+
+        units = min(5, count_units(overkill, 5))
+        bonus = int(units)
+
+        return bonus
 
     def updateCards(self, posX, posY, cardsDict, cardsList, scale=1.5, spacing=90, baseYOffset=-20, leftShift=40):
         cardsDict.clear()
