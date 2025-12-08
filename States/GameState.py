@@ -27,16 +27,16 @@ class GameState(State):
         self.deck = State.deckManager.shuffleDeck(State.deckManager.createDeck(self.playerInfo.levelManager.curSubLevel))
         self.hand = State.deckManager.dealCards(self.deck, 8)
         self.cards = {}
-        
+
         self.jokerDeck = State.deckManager.createJokerDeck()
         self.playerJokers = []
         self.jokers = {}
         # track which jokers activated for the current played hand (used to offset their draw)
         self.activated_jokers = set()
-        
+
         # for joker in self.jokerDeck:
         #     print(joker.name)
-        
+
         self.cardsSelectedList = []
         self.cardsSelectedRect = {}
         self.playedHandNameList = ['']
@@ -187,7 +187,7 @@ class GameState(State):
             self.nextState = "ShopState"
 
             return
-        
+
         # Handle boss level music switching
         bossName = self.playerInfo.levelManager.curSubLevel.bossLevel
         if bossName and not self.isBossActive:
@@ -196,7 +196,7 @@ class GameState(State):
         elif not bossName and self.isBossActive:
             self.isBossActive = False
             self.switchToNormalTheme()
-            
+
         # Handle play hand timing
         if self.playHandActive and self.playHandStartTime > 0:
             curTime = pygame.time.get_ticks()
@@ -520,8 +520,9 @@ class GameState(State):
                     else:
                         card.isSelected = False
                         self.cards[card].y += 50
-                        self.cardsSelectedList.remove(card)
-                        self.deselect_sfx.play()
+                        if card in self.cardsSelectedList:
+                            self.cardsSelectedList.remove(card)
+                            self.deselect_sfx.play()
                     return  # Stop after interacting with one card
 
     # TODO (TASK 7) - Rewrite this function so that it calculates the player's gold reward *recursively*.
@@ -610,7 +611,7 @@ class GameState(State):
         for card, rect in self.cards.items():
             if rect.collidepoint(mousePos):
                 break
-    
+
     def drawCardTooltip(self):
         mousePos = pygame.mouse.get_pos()
         for card, rect in self.cards.items():
@@ -638,7 +639,7 @@ class GameState(State):
                 tooltip_y = rect.y - tooltip_h - 10
                 self.screen.blit(tooltip_surf, (tooltip_x, tooltip_y))
                 break
-    
+
     # -------- Play Hand Logic -----------
     def playHand(self):
         if self.playerInfo.amountOfHands == 0: # Check if last hand and failed the round
