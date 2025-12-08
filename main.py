@@ -26,13 +26,13 @@ if __name__ == "__main__":
     curScreen = startScreen
 
     # --- Main loop ---
-    while True:
+    running = True
+    while running:
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.QUIT:
-                if curScreen == gameScreen:
-                    curScreen.nextState = "StartState"
-                curScreen.isFinished = True
+                pygame.quit()
+                exit()
             curScreen.userInput(event)              # Pass all events to both current screen and debug overlay
 
         if curScreen.isFinished:                    # Handle state transitions
@@ -66,7 +66,7 @@ if __name__ == "__main__":
                 curScreen.isFinished = False
                 curScreen = LevelSelectState(playerInfo=player, deckManager=State.deckManager)
             else:
-                exit()
+                running=False
 
         curScreen.update()
         pygame.display.update()
